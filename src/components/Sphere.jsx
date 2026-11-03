@@ -177,6 +177,12 @@ export function Bubble({
 
   const bubbleColor = useMemo(() => getRandomColor(), []);
 
+  // E2E marker, set imperatively: as a JSX prop it trips react/no-unknown-property.
+  const meshRef = useRef();
+  useEffect(() => {
+    if (meshRef.current) meshRef.current.userData.kind = "bubble";
+  }, []);
+
   const bubbleMaterial = useMemo(
     () =>
       new THREE.MeshLambertMaterial({
@@ -205,6 +211,7 @@ export function Bubble({
         args={[0.15 * scale, 0.275 * scale]}
       />
       <mesh
+        ref={meshRef}
         castShadow
         receiveShadow
         scale={scale}

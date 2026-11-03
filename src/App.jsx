@@ -68,7 +68,30 @@ export const App = () => {
         shadows
         gl={{ alpha: true, stencil: false, depth: false, antialias: false }}
         camera={{ position: [0, 0, 20], fov: 32.5, near: 1, far: 100 }}
-        onCreated={(state) => (state.gl.toneMappingExposure = 1.5)}
+        onCreated={(state) => {
+          state.gl.toneMappingExposure = 1.5;
+
+          // E2E observation bridge. Only in dev, and only when explicitly
+          // requested with ?e2e=1, so it never ships in a build.
+          if (
+            import.meta.env.DEV &&
+            new URLSearchParams(window.location.search).has("e2e")
+          ) {
+            const tmp = new THREE.Vector3();
+            window.__greeterDebug = {
+              bubbles: () => {
+                const out = [];
+                state.scene.traverse((object) => {
+                  if (object.userData?.kind === "bubble") {
+                    object.getWorldPosition(tmp);
+                    out.push({ x: tmp.x, y: tmp.y, z: tmp.z });
+                  }
+                });
+                return out;
+              },
+            };
+          }
+        }}
       >
         <WatercolorBackground bgColor={bgColor} />
         <ambientLight intensity={1} />
