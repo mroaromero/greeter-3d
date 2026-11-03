@@ -642,3 +642,213 @@ a:hover {
   }
 }
 
+
+/* ════════════════════════════════════════════════
+   Session transition (greeter ⇄ desktop)
+   ════════════════════════════════════════════════ */
+
+/* Full-screen curtain. Sits above the greeter overlay (z 10) and the desktop
+   (z 20); it never intercepts input, its only job is to be clipped. */
+.login-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login-transition__panel {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 18% 8%, rgba(126, 98, 214, 0.28) 0%, rgba(126, 98, 214, 0) 58%),
+    radial-gradient(90% 70% at 88% 92%, rgba(54, 40, 104, 0.55) 0%, rgba(54, 40, 104, 0) 62%),
+    linear-gradient(118deg, #0b0912 0%, #151024 52%, #090710 100%);
+  will-change: clip-path;
+  backface-visibility: hidden;
+}
+
+/* Sheen on the leading edge, so the wipe reads as a moving surface instead of
+   a shape that pops into place. It lives inside the panel and is clipped with it. */
+.login-transition__panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 160px;
+  pointer-events: none;
+}
+
+.login-transition__panel[data-edge="right"]::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(196, 176, 255, 0.22) 0%, rgba(196, 176, 255, 0) 100%);
+}
+
+.login-transition__panel[data-edge="left"]::after {
+  left: 0;
+  background: linear-gradient(90deg, rgba(196, 176, 255, 0.22) 0%, rgba(196, 176, 255, 0) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-transition__panel {
+    will-change: auto;
+  }
+}
+
+/* ── Mock desktop: the wipe's destination ── */
+.desktop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  color: #e9e5ff;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 60% at 15% 0%, rgba(120, 92, 210, 0.34) 0%, rgba(120, 92, 210, 0) 62%),
+    radial-gradient(60% 55% at 85% 100%, rgba(72, 54, 140, 0.42) 0%, rgba(72, 54, 140, 0) 60%),
+    radial-gradient(45% 40% at 62% 42%, rgba(38, 30, 68, 0.55) 0%, rgba(38, 30, 68, 0) 70%),
+    linear-gradient(155deg, #0a0811 0%, #161129 46%, #07060d 100%);
+}
+
+.desktop__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 32px 0;
+}
+
+.desktop__session {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 15px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.desktop__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6ee7b7;
+  box-shadow: 0 0 10px rgba(110, 231, 183, 0.75);
+}
+
+.desktop__user {
+  font-family: "Antonio", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.desktop__handle {
+  font-size: 11.5px;
+  color: rgba(233, 229, 255, 0.55);
+}
+
+.desktop__stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.desktop__window {
+  width: min(560px, 86vw);
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(16, 13, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 40px 80px -30px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.desktop__window-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 13px 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.desktop__window-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(233, 229, 255, 0.22);
+}
+
+.desktop__window-body {
+  padding: 30px 32px 34px;
+}
+
+.desktop__eyebrow {
+  font-family: "Antonio", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: #a996ff;
+  margin-bottom: 10px;
+}
+
+.desktop__title {
+  margin: 0 0 12px;
+  font-family: "Antonio", sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #f3f0ff;
+}
+
+.desktop__text {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(233, 229, 255, 0.66);
+}
+
+.desktop__hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 32px 34px;
+}
+
+.desktop__hint-label {
+  font-family: "Antonio", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  line-height: 1;
+  text-transform: uppercase;
+  color: rgba(233, 229, 255, 0.78);
+}
+
+@media (max-width: 470px) {
+  .desktop__bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 20px 20px 0;
+  }
+  .desktop__session {
+    align-self: flex-start;
+  }
+  .desktop__window-body {
+    padding: 24px 22px 28px;
+  }
+}

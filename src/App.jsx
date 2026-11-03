@@ -10,11 +10,25 @@ import { HelloWorld } from "./components/HelloWorld";
 import { Pointer } from "./components/Pointer";
 import { WatercolorBackground } from "./components/WatercolorBackground";
 import Overlay from "./components/Overlay";
+import { LoginTransition } from "./components/LoginTransition";
+import { DesktopSurface } from "./components/DesktopSurface";
 
 THREE.ColorManagement.legacyMode = false;
 const spheres = [...Array(45)].map(() => ({
   scale: [0.75, 0.75, 1, 1, 1.25][Math.floor(Math.random() * 5)],
 }));
+
+// Greeter → desktop is a four-pass curtain. Each session state maps to the
+// wipe pass that must be on screen; `idle` parks the panel off-screen.
+const PASS_BY_SESSION = {
+  covering: "cover",
+  revealing: "reveal",
+  desktop: "reveal",
+  returning: "returnCover",
+  returned: "returnReveal",
+};
+
+const DESKTOP_SESSIONS = new Set(["revealing", "desktop", "returning"]);
 
 export const App = () => {
   // Torus geometry by default
@@ -22,6 +36,8 @@ export const App = () => {
   const [isDispersed, setIsDispersed] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [scatterSignal, setScatterSignal] = useState(0);
+  // greeter | covering | revealing | desktop | returning | returned
+  const [session, setSession] = useState("greeter");
   const loginTimerRef = useRef(null);
 
   // Drop any pending "open the card" timer if the app unmounts.
@@ -58,8 +74,31 @@ export const App = () => {
   };
 
   const handleLoginSuccess = () => {
-    // Keep login open with success feedback
+    // Start the curtain. The card stays mounted underneath until the cover
+    // pass lands, so the hand-off has no visible gap.
+    setSession("covering");
   };
+
+  const handleCovered = () => {
+    // Greeter is hidden: close the card, send the bubbles back home and mount
+    // the desktop underneath the still-covering panel.
+    setIsLoginOpen(false);
+    setIsDispersed(false);
+    setSession("revealing");
+  };
+
+  const handleRevealed = () => setSession("desktop");
+
+  const handleDesktopExit = () => {
+    if (session === "desktop") setSession("returning");
+  };
+
+  const handleReturnCovered = () => {
+    // The panel covers the desktop again: drop it and let the greeter show.
+    setSession("returned");
+  };
+
+  const handleReturned = () => setSession("greeter");
 
   return (
     <>
@@ -138,6 +177,18 @@ export const App = () => {
         onTriggerLogin={handleTriggerLogin}
         onCloseLogin={handleCloseLogin}
         onLoginSuccess={handleLoginSuccess}
+      />
+
+      {DESKTOP_SESSIONS.has(session) && (
+        <DesktopSurface onExit={handleDesktopExit} userName="Manuel Roa" userHandle="lad-manu" />
+      )}
+
+      <LoginTransition
+        pass={PASS_BY_SESSION[session] ?? "idle"}
+        onCovered={handleCovered}
+        onRevealed={handleRevealed}
+        onReturnCovered={handleReturnCovered}
+        onReturned={handleReturned}
       />
     </>
   );
