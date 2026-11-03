@@ -1,0 +1,338 @@
+@import url("https://rsms.me/inter/inter.css");
+@import url("https://fonts.googleapis.com/css2?family=Antonio:wght@600&display=swap");
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+body {
+  position: fixed;
+  overflow: hidden;
+  overscroll-behavior-y: none;
+  font-family: "Inter var", sans-serif;
+  cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMwLjUgMTZDMzAuNSAyNC4wMDgxIDI0LjAwODEgMzAuNSAxNiAzMC41QzcuOTkxODcgMzAuNSAxLjUgMjQuMDA4MSAxLjUgMTZDMS41IDcuOTkxODcgNy45OTE4NyAxLjUgMTYgMS41QzI0LjAwODEgMS41IDMwLjUgNy45OTE4NyAzMC41IDE2WiIgc3Ryb2tlPSJibGFjayIvPgo8cGF0aCBkPSJNNiA5QzcuNjU2ODUgOSA5IDcuNjU2ODUgOSA2QzkgNC4zNDMxNSA3LjY1Njg1IDMgNiAzQzQuMzQzMTUgMyAzIDQuMzQzMTUgMyA2QzMgNy42NTY4NSA0LjM0MzE1IDkgNiA5WiIgZmlsbD0iYmxhY2siLz4KPC9zdmc+Cg=="),
+    auto;
+}
+
+p {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  padding-right: 10px;
+  cursor: pointer;
+  pointer-events: all;
+  color: black;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+@keyframes pulseBlink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.blink-prompt {
+  animation: pulseBlink 2s ease-in-out infinite;
+  user-select: none;
+  cursor: pointer;
+  letter-spacing: 1.5px !important;
+  transition: opacity 0.3s ease;
+}
+
+.blink-prompt:hover {
+  opacity: 1 !important;
+  animation-play-state: paused;
+}
+
+@media (max-width: 890px) {
+  #heading {
+    font-size: 40px !important;
+    line-height: 40px !important;
+  }
+  .full {
+    flex: 15 1 0% !important;
+  }
+  #sk {
+    font-size: 150px !important;
+  }
+  #num {
+    font-size: 150px !important;
+  }
+  #text {
+    font-size: 13px !important;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   SDDM Login Overlay & Glass Card
+   ════════════════════════════════════════════════ */
+
+.sddm-overlay-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: all;
+  animation: sddmFadeIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sddmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Card shell ── */
+.sddm-card {
+  position: relative;
+  width: 380px;
+  max-width: 92vw;
+  /* Light frosted glass — contrasts well against the watercolor bg */
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 28px;
+  padding: 38px 30px 32px;
+  box-shadow:
+    0 24px 52px -12px rgba(0, 0, 0, 0.22),
+    0 10px 24px -8px rgba(0, 0, 0, 0.1),
+    inset 0 1.5px 1px rgba(255, 255, 255, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: sddmPopIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sddmPopIn {
+  from { opacity: 0; transform: scale(0.91) translateY(20px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+/* ── Close button ── */
+.sddm-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.06);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #52525b;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+.sddm-close-btn:hover {
+  background: rgba(0, 0, 0, 0.13);
+  color: #111;
+  transform: scale(1.07);
+}
+
+/* ── Avatar ── */
+.sddm-avatar-container {
+  position: relative;
+  margin-bottom: 16px;
+}
+.sddm-avatar {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1f1f2e 0%, #3e3859 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 22px rgba(31, 31, 46, 0.32);
+  border: 3px solid rgba(255, 255, 255, 0.95);
+}
+.sddm-status-dot {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 14px;
+  height: 14px;
+  background: #10b981;
+  border: 2.5px solid #fff;
+  border-radius: 50%;
+}
+
+/* ── User info ── */
+.sddm-user-info {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.sddm-username {
+  font-size: 20px;
+  font-weight: 700;
+  /* Strong dark text on light card */
+  color: #111827;
+  margin: 0 0 3px 0;
+  letter-spacing: -0.4px;
+}
+.sddm-userhandle {
+  font-size: 13px;
+  /* Visible but secondary */
+  color: #4b5563;
+  font-weight: 500;
+}
+
+/* ── Form container ── */
+.sddm-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── "CONTRASEÑA" label above tiles ── */
+.sddm-field-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  /* Clearly readable on white card */
+  color: #374151;
+  margin: 0 0 2px 2px;
+  align-self: flex-start;
+}
+
+/* ── Action row: show/hide + submit ── */
+.sddm-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.sddm-toggle-pwd {
+  background: rgba(0, 0, 0, 0.06);
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  color: #374151;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.sddm-toggle-pwd:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.12);
+  color: #111827;
+  border-color: rgba(0, 0, 0, 0.25);
+}
+.sddm-toggle-pwd:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sddm-submit-btn {
+  background: #111827;
+  color: #fff;
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+.sddm-submit-btn:hover:not(:disabled) {
+  background: #1f2937;
+  transform: scale(1.09);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.34);
+}
+.sddm-submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Spinner ── */
+.sddm-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: sddmSpin 0.7s linear infinite;
+}
+@keyframes sddmSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Feedback messages ── */
+.sddm-feedback-msg {
+  font-size: 13px;
+  margin: 14px 0 0 0;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.1px;
+}
+.sddm-feedback-msg.error {
+  color: #dc2626;
+  animation: sddmSlideUp 0.22s ease;
+}
+.sddm-feedback-msg.success {
+  color: #16a34a;
+  animation: sddmSlideUp 0.22s ease;
+}
+@keyframes sddmSlideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ── Hint text ── */
+.sddm-hint-text {
+  font-size: 11px;
+  /* Readable grey on the white card */
+  color: #6b7280;
+  margin: 12px 0 0 0;
+  text-align: center;
+  letter-spacing: -0.1px;
+}
+
+/* ── Shake on error ── */
+.sddm-shake {
+  animation: sddmShakeKF 0.46s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes sddmShakeKF {
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(5px, 0, 0);  }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0);  }
+}
