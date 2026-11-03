@@ -110,7 +110,7 @@ a:hover {
 /* ── Card shell ── */
 .sddm-card {
   position: relative;
-  width: 380px;
+  width: 460px;
   max-width: 92vw;
   /* Light frosted glass — contrasts well against the watercolor bg */
   background: rgba(255, 255, 255, 0.86);
@@ -118,7 +118,7 @@ a:hover {
   -webkit-backdrop-filter: blur(32px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.95);
   border-radius: 28px;
-  padding: 38px 30px 32px;
+  padding: 34px 30px 30px;
   box-shadow:
     0 24px 52px -12px rgba(0, 0, 0, 0.22),
     0 10px 24px -8px rgba(0, 0, 0, 0.1),
@@ -208,6 +208,184 @@ a:hover {
   font-weight: 500;
 }
 
+/* ── Hero row: identity + clock widget ── */
+.sddm-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  /* Clears the absolutely positioned close button, which sits at 16–48px */
+  margin-top: 24px;
+  margin-bottom: 22px;
+}
+
+.sddm-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sddm-identity .sddm-avatar-container {
+  margin-bottom: 0;
+}
+.sddm-identity .sddm-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 21px;
+}
+.sddm-identity .sddm-status-dot {
+  bottom: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
+}
+.sddm-identity .sddm-user-info {
+  text-align: left;
+  margin-bottom: 0;
+  min-width: 0;
+}
+.sddm-identity .sddm-username {
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sddm-identity .sddm-userhandle {
+  font-size: 12px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ══ Clock · date · weather — CSS-3D glass tile ══ */
+.sddm-clock {
+  position: relative;
+  flex: 0 0 auto;
+  width: 154px;
+  height: 94px;
+  perspective: 560px;
+  perspective-origin: 28% 36%;
+  pointer-events: none;
+}
+
+/* Extruded slab behind the face: fakes the tile's thickness */
+.sddm-clock__edge {
+  position: absolute;
+  inset: 5px 3px 1px 5px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #a9a2c2 0%, #6f6a8d 100%);
+  transform: translateZ(-18px) translateY(10px) translateX(4px);
+  filter: blur(0.6px);
+  opacity: 0.9;
+}
+
+.sddm-clock__face {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #f7f5ff;
+  background:
+    radial-gradient(120% 85% at 16% 0%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 48%),
+    linear-gradient(150deg, #272140 0%, #342c56 55%, #191527 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -20px 28px -20px rgba(0, 0, 0, 0.9),
+    0 12px 24px -10px rgba(24, 20, 40, 0.55);
+  transform: rotateX(10deg) rotateY(-13deg);
+  transform-style: preserve-3d;
+  animation: sddmClockFloat 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Diagonal sheen, clipped to the face's rounded corners */
+.sddm-clock__face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0.24) 0%,
+    rgba(255, 255, 255, 0.07) 30%,
+    rgba(255, 255, 255, 0) 54%
+  );
+  pointer-events: none;
+}
+
+@keyframes sddmClockFloat {
+  0%, 100% { transform: rotateX(10deg) rotateY(-13deg) translateY(0); }
+  50%      { transform: rotateX(6deg)  rotateY(-6deg)  translateY(-3px); }
+}
+
+.sddm-clock__time {
+  font-family: "Antonio", sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  transform: translateZ(14px);
+  text-shadow: 0 2px 7px rgba(0, 0, 0, 0.45);
+}
+
+.sddm-clock__colon {
+  color: #c9bfff;
+  animation: sddmClockBlink 2s steps(1, end) infinite;
+}
+
+@keyframes sddmClockBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.15; }
+}
+
+.sddm-clock__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  transform: translateZ(7px);
+}
+
+.sddm-clock__date {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  /* Same ink as the hour digits */
+  color: inherit;
+  white-space: nowrap;
+}
+
+.sddm-clock__weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  /* Same ink as the hour digits */
+  color: inherit;
+}
+
+.sddm-clock__icon {
+  display: flex;
+  opacity: 0.85;
+}
+
+.sddm-clock__temp {
+  font-family: "Antonio", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.3px;
+}
+
 /* ── Form container ── */
 .sddm-form {
   width: 100%;
@@ -218,12 +396,13 @@ a:hover {
 
 /* ── "CONTRASEÑA" label above tiles ── */
 .sddm-field-label {
-  font-size: 10.5px;
+  font-family: "Antonio", sans-serif;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
-  /* Clearly readable on white card */
-  color: #374151;
+  /* Same family + colour as the other overlay prompts */
+  color: black;
   margin: 0 0 2px 2px;
   align-self: flex-start;
 }
@@ -326,6 +505,81 @@ a:hover {
   letter-spacing: -0.1px;
 }
 
+/* ── Keycap hints ── */
+.sddm-hint-keys {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.sddm-hint-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Same family + colour as the main "HAZ CLICK" prompt, scaled to the card */
+.sddm-hint-label {
+  font-family: "Antonio", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  line-height: 1;
+  color: black;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sddm-hint-sep {
+  width: 1px;
+  height: 15px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+/* ── Physical keycaps ── */
+.keycap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 25px;
+  min-width: 25px;
+  padding: 0 5px;
+  border-radius: 6px;
+  font-family: "Antonio", sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  line-height: 1;
+  color: #25242f;
+  background: linear-gradient(180deg, #ffffff 0%, #f2f1f6 54%, #e3e2ea 100%);
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  /* Inset bevel + hard bottom slab = the key's physical depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.08),
+    0 3px 0 #c8c6d2,
+    0 5px 9px -2px rgba(0, 0, 0, 0.24);
+  transform: translateY(-1px);
+  user-select: none;
+}
+
+.keycap--enter {
+  min-width: 34px;
+}
+
+.keycap--esc {
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sddm-clock__face,
+  .sddm-clock__colon {
+    animation: none;
+  }
+}
+
 /* ── Shake on error ── */
 .sddm-shake {
   animation: sddmShakeKF 0.46s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
@@ -336,3 +590,55 @@ a:hover {
   30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
   40%, 60% { transform: translate3d(6px, 0, 0);  }
 }
+
+/* ── Wordle caret: the caret on the next tile to be filled ── */
+.wordle-cursor {
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
+  color: rgba(30, 27, 75, 0.7);
+  /* steps(1) holds each keyframe value, giving a hard on/off caret blink */
+  animation: wordleCaretBlink 1.05s steps(1, end) infinite;
+}
+
+@keyframes wordleCaretBlink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordle-cursor {
+    animation: none;
+  }
+}
+
+/* Narrow viewports: stack the identity above the clock tile */
+@media (max-width: 470px) {
+  .sddm-card {
+    width: 94vw;
+    padding: 30px 20px 26px;
+  }
+  .sddm-hero {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .sddm-identity {
+    justify-content: center;
+  }
+  .sddm-clock {
+    width: 100%;
+    height: 86px;
+  }
+  .sddm-hint-keys {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+}
+

@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { WordleTiles } from "./WordleTiles";
+import { KeyCap } from "./KeyCap";
+import { ClockWeatherWidget } from "./ClockWeatherWidget";
+
+// Demo credential, until the greetd/PAM bridge replaces this check.
+// 10 characters on purpose: it exercises the sliding window (> 8 tiles) and the
+// strip rewind when the outcome word takes over the row.
+const DEMO_PASSWORD = "1111111111";
 
 export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel Roa", userHandle = "lad-manu" }) {
   const [password, setPassword] = useState("");
@@ -9,31 +16,53 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef(null);
 
-  // Auto-focus input on mount; handle Escape to close
+  // Every timer is tracked so it can be cancelled on unmount. Without this,
+  // closing the card mid-verification still mutated state of a dead component.
+  const timersRef = useRef(new Set());
+  const schedule = useCallback((fn, ms) => {
+    const id = setTimeout(() => {
+      timersRef.current.delete(id);
+      fn();
+    }, ms);
+    timersRef.current.add(id);
+    return id;
+  }, []);
+  useEffect(
+    () => () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current.clear();
+    },
+    []
+  );
+
+  // Hold the latest onClose without re-subscribing on every parent render.
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      inputRef.current?.focus();
-      setIsFocused(true);
-    });
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  // Escape closes the card. Mount-only: no dependency on parent identity,
+  // so this never steals focus back by re-running the autofocus below.
+  useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current?.();
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClose]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Auto-focus the hidden input once, on mount only.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   // After error: wait for tile animation → reset to idle + clear password
   const handleErrorReset = () => {
-    setTimeout(() => {
+    schedule(() => {
       setStatus("idle");
       setPassword("");
-      setTimeout(() => {
-        inputRef.current?.focus();
-        setIsFocused(true);
-      }, 50);
+      schedule(() => inputRef.current?.focus(), 50);
     }, 1600);
   };
 
@@ -49,16 +78,15 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
     setStatus("verifying");
 
     // Simulate PAM authentication (~600ms)
-    setTimeout(() => {
-      if (password === "error") {
+    schedule(() => {
+      if (password !== DEMO_PASSWORD) {
         setStatus("error");
         setErrorMessage("Contraseña incorrecta");
         handleErrorReset();
       } else {
         setStatus("success");
-        setTimeout(() => {
-          if (onLoginSuccess) onLoginSuccess();
-        }, 2200); // let success tiles animate fully before leaving
+        // let success tiles animate fully before leaving
+        schedule(() => onLoginSuccess?.(), 2200);
       }
     }, 600);
   };
@@ -66,7 +94,6 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
   // Re-focus hidden input when clicking the tile area
   const handleTileAreaClick = () => {
     inputRef.current?.focus();
-    setIsFocused(true);
   };
 
   return (
@@ -88,16 +115,21 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
           </svg>
         </button>
 
-        {/* Avatar */}
-        <div className="sddm-avatar-container">
-          <div className="sddm-avatar"><span>MR</span></div>
-          <div className="sddm-status-dot" title="En línea" />
-        </div>
+        {/* Avatar + identity, with the clock/date/weather tile on the right */}
+        <div className="sddm-hero">
+          <div className="sddm-identity">
+            <div className="sddm-avatar-container">
+              <div className="sddm-avatar"><span>MR</span></div>
+              <div className="sddm-status-dot" title="En línea" />
+            </div>
 
-        {/* User info */}
-        <div className="sddm-user-info">
-          <h2 className="sddm-username">{userName}</h2>
-          <span className="sddm-userhandle">@{userHandle}</span>
+            <div className="sddm-user-info">
+              <h2 className="sddm-username">{userName}</h2>
+              <span className="sddm-userhandle">@{userHandle}</span>
+            </div>
+          </div>
+
+          <ClockWeatherWidget />
         </div>
 
         {/* Password form */}
@@ -115,6 +147,7 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
               password={password}
               showPassword={showPassword}
               status={status}
+              isFocused={isFocused}
             />
           </div>
 
@@ -124,9 +157,8 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit();
-            }}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             disabled={status === "verifying" || status === "success" || status === "error"}
             style={{
               position: "absolute",
@@ -147,6 +179,8 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
               type="button"
               className="sddm-toggle-pwd"
               onClick={() => setShowPassword(!showPassword)}
+              // Keep focus on the hidden input so the caret stays visible.
+              onMouseDown={(e) => e.preventDefault()}
               title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               disabled={status === "verifying" || status === "success" || status === "error"}
             >
@@ -168,6 +202,7 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
             <button
               type="submit"
               disabled={status === "verifying" || status === "success" || status === "error"}
+              onMouseDown={(e) => e.preventDefault()}
               className="sddm-submit-btn"
               title="Iniciar sesión (Enter)"
             >
@@ -190,14 +225,23 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
           {status === "success" && (
             <p className="sddm-feedback-msg success">✓ Sesión iniciada</p>
           )}
-          {(status === "idle" || status === "verifying") && (
-            <p className="sddm-hint-text">
-              {status === "verifying"
-                ? "Verificando…"
-                : password.length === 0
-                ? "Escribe tu contraseña y pulsa Enter"
-                : `${password.length} carácter${password.length !== 1 ? "es" : ""} · Enter para acceder · Esc para cancelar`}
-            </p>
+          {status === "verifying" && (
+            <p className="sddm-hint-text">Verificando…</p>
+          )}
+          {/* Keycaps replace the old "Enter"/"Esc" literals; the labels reuse the
+              Antonio / black treatment of the main prompt for contrast. */}
+          {status === "idle" && (
+            <div className="sddm-hint-keys">
+              <span className="sddm-hint-item">
+                <KeyCap variant="enter" />
+                <span className="sddm-hint-label">para acceder</span>
+              </span>
+              <span className="sddm-hint-sep" aria-hidden="true" />
+              <span className="sddm-hint-item">
+                <KeyCap variant="esc" />
+                <span className="sddm-hint-label">para cancelar</span>
+              </span>
+            </div>
           )}
         </form>
       </div>

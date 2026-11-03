@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
 import { EffectComposer, N8AO } from "@react-three/postprocessing";
@@ -23,6 +23,13 @@ export const App = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [scatterSignal, setScatterSignal] = useState(0);
   const loginTimerRef = useRef(null);
+
+  // Drop any pending "open the card" timer if the app unmounts.
+  useEffect(() => {
+    return () => {
+      if (loginTimerRef.current) clearTimeout(loginTimerRef.current);
+    };
+  }, []);
 
   const { aoColor, directionalLightColor, spotLightColor, bgColor } = useControls({
     aoColor: "#5b41aa",

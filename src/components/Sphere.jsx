@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { useRef, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, RigidBody, CylinderCollider } from "@react-three/rapier";
+import { attractionVelocity, RETURN_RELEASE_RADIUS } from "./returnMotion";
 
 const geometryTypes = {
   Sphere: new THREE.SphereGeometry(0.7, 32, 32),
@@ -29,6 +30,22 @@ export function Bubble({
   scatterSignal = 0,
 }) {
   const api = useRef();
+  // Tracks whether the scene has been dispersed at least once, so the initial
+  // idle drift is never mistaken for a "return to center" phase.
+  const hasScattered = useRef(false);
+  const returning = useRef(false);
+
+  // When dispersion ends, switch to an explicit attraction phase toward the
+  // Hello World. Without this the bubbles keep the velocity they had at the
+  // corners and drift away, which reads as the scene restarting.
+  useEffect(() => {
+    if (isDispersed) {
+      hasScattered.current = true;
+      returning.current = false;
+    } else if (hasScattered.current) {
+      returning.current = true;
+    }
+  }, [isDispersed]);
 
   // Assign this torus to one of the 4 screen corners:
   // 0: Top-Right, 1: Top-Left, 2: Bottom-Left, 3: Bottom-Right
@@ -119,6 +136,32 @@ export function Bubble({
         true
       );
     } else {
+      const dist = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+
+      if (returning.current) {
+        // RETURN PHASE: the four corner groups (index % 4) travel back to the
+        // Hello World together. They arc inward and are released at a radius,
+        // never at the exact origin, so they rejoin the ambient cloud around
+        // the text instead of piling into one point and exploding apart.
+        if (dist < RETURN_RELEASE_RADIUS) {
+          returning.current = false;
+        } else {
+          api.current.setLinvel(attractionVelocity(pos), true);
+
+          // Spin fades out as they converge, so arrival feels like settling.
+          const spin = Math.min(1, (dist - RETURN_RELEASE_RADIUS) / 6);
+          api.current.setAngvel(
+            {
+              x: Math.sin(state.clock.elapsedTime * 1.2 + index) * 0.8 * spin,
+              y: Math.cos(state.clock.elapsedTime * 1.2 + index) * 0.8 * spin,
+              z: 0.35 * spin,
+            },
+            true
+          );
+          return;
+        }
+      }
+
       // RESTING MODE: converge and accumulate gently in center around HelloWorld
       vec
         .set(pos.x, pos.y, pos.z)
