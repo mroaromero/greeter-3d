@@ -121,8 +121,15 @@ test("las cuatro esquinas vuelven al Hello World al cerrar el login", async ({ p
   const threshold = Math.max(settled * 1.35, settled + 1.2);
   await waitForAverage(page, "below", threshold, 30_000);
 
+  // Cruzar el umbral solo dice que ya empezo a volver: con render por GPU el
+  // cruce se detecta en el frame exacto y medir ahi deja el assert sin margen.
+  // Esperamos a que se asiente de nuevo para medir el reposo real.
+  const returnedSettled = await waitForStableAverage(page);
   const returned = stats(await bubbles(page));
-  console.log(`[fisica] retorno: ${returned.average.toFixed(2)} (umbral ${threshold.toFixed(2)})`);
+  console.log(
+    `[fisica] retorno: ${returned.average.toFixed(2)} ` +
+      `(reposo ${returnedSettled.toFixed(2)}, umbral ${threshold.toFixed(2)})`
+  );
   expect(returned.average).toBeLessThan(threshold);
   expect(returned.average).toBeLessThan(dispersedStats.average / 1.5);
 });
