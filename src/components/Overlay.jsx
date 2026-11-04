@@ -1,7 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { PasswordLoginCard } from "./sddm/PasswordLoginCard";
+import { SystemButtons } from "./sddm/SystemButtons";
+
+const OVERLAY_POINTER_EVENTS = "none";
 
 const Overlay = ({ isDispersed = false, isLoginOpen = false, onTriggerLogin, onCloseLogin, onLoginSuccess }) => {
+  // Feedback visual para acciones del sistema (power / restart / suspend)
+  const [systemAction, setSystemAction] = useState(null); // null | { type: 'power'|'restart'|'suspend', message: string }
+
+  const handleSystemAction = (type) => {
+    const labels = { power: "Apagando…", restart: "Reiniciando…", suspend: "Suspendiendo…" };
+    setSystemAction({ type, message: labels[type] });
+    // Auto-clear la notificación tras 3 segundos
+    setTimeout(() => setSystemAction(null), 3000);
+  };
+
   return (
     <div
       style={{
@@ -107,12 +120,63 @@ const Overlay = ({ isDispersed = false, isLoginOpen = false, onTriggerLogin, onC
 
       {/* SDDM Password Card Centered Modal */}
       {isLoginOpen && (
-        <PasswordLoginCard
-          onClose={onCloseLogin}
-          onLoginSuccess={onLoginSuccess}
-          userName="Manuel Roa"
-          userHandle="lad-manu"
-        />
+        <div style={{ pointerEvents: "all" }}>
+          <PasswordLoginCard
+            onClose={onCloseLogin}
+            onLoginSuccess={onLoginSuccess}
+            userName="Manuel Roa"
+            userHandle="lad-manu"
+          />
+          <SystemButtons
+            onPowerOff={() => handleSystemAction("power")}
+            onRestart={() => handleSystemAction("restart")}
+            onSuspend={() => handleSystemAction("suspend")}
+          />
+        </div>
+      )}
+
+      {/* Notificación de acción del sistema */}
+      {systemAction && (
+        <div
+          className="sys-notification"
+          style={{
+            position: "fixed",
+            top: 40,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 200,
+            animation: "sysNotifSlide 0.3s ease forwards",
+          }}
+        >
+          <div
+            className="sys-notification__badge"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "12px 20px",
+              background: "rgba(11, 9, 18, 0.95)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: 9999,
+              color: "#f8fafc",
+              boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.5)",
+            }}
+          >
+            <span style={{ fontSize: 16 }}>{systemAction.type === "power" ? "⏻" : systemAction.type === "restart" ? "⟳" : "⏸"}</span>
+            <span
+              style={{
+                fontFamily: "'Antonio', sans-serif",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: 0.8,
+                textTransform: "uppercase",
+              }}
+            >
+              {systemAction.message}
+            </span>
+          </div>
+        </div>
       )}
     </div>
   );

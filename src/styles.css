@@ -110,15 +110,15 @@ a:hover {
 /* ── Card shell ── */
 .sddm-card {
   position: relative;
-  width: 460px;
+  width: 520px;
   max-width: 92vw;
   /* Light frosted glass — contrasts well against the watercolor bg */
   background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.95);
-  border-radius: 28px;
-  padding: 34px 30px 30px;
+  border-radius: 32px;
+  padding: 40px 34px 34px;
   box-shadow:
     0 24px 52px -12px rgba(0, 0, 0, 0.22),
     0 10px 24px -8px rgba(0, 0, 0, 0.1),
@@ -852,3 +852,124 @@ a:hover {
     padding: 24px 22px 28px;
   }
 }
+
+/* ════════════════════════════════════════════════
+   System action buttons — power / restart / suspend
+   ═════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════
+   System action buttons — prism edge, animated breathing border
+   Icon-only, 5s cancelable countdown on click
+   ════════════════════════════════════════════════════ */
+.sys-btns {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 24px;
+  z-index: 110;
+}
+
+/* Prism edge button: translucent inner fill + animated rainbow border */
+.sys-btn {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  border: 2.5px solid transparent;
+  background:
+    linear-gradient(#0b0912, #0b0912) padding-box,
+    linear-gradient(135deg, #ef4444, #f59e0b, #84cc16, #06b6d4, #6366f1, #a855f7, #ec4899) border-box;
+  color: #f8fafc;
+  cursor: pointer;
+  box-shadow:
+    0 10px 28px -8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s ease, filter 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Breathing prism animation: border gradient rotates, glow pulses */
+@keyframes prismBreathe {
+  0%, 100% {
+    filter: hue-rotate(0deg) brightness(1);
+    box-shadow:
+      0 10px 28px -8px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  50% {
+    filter: hue-rotate(120deg) brightness(1.15);
+    box-shadow:
+      0 14px 36px -10px rgba(99, 102, 241, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+}
+
+.sys-btn {
+  animation: prismBreathe 5s ease-in-out infinite;
+}
+
+.sys-btn:hover {
+  animation-play-state: paused;
+  transform: translateY(-4px) scale(1.08);
+  filter: hue-rotate(60deg) brightness(1.25);
+  box-shadow:
+    0 16px 40px -12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.sys-btn:active:not(.sys-btn--counting) {
+  transform: translateY(0) scale(0.94);
+}
+
+/* Countdown state: show seconds instead of icon, pulse the border */
+.sys-btn--counting {
+  animation: prismBreathe 2s ease-in-out infinite;
+  filter: hue-rotate(180deg) brightness(1.3);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.35),
+    0 10px 28px -8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.sys-btn-countdown {
+  font-family: "Antonio", sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #f8fafc;
+  pointer-events: none;
+}
+
+.sys-btn svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+@media (max-width: 470px) {
+  .sys-btns {
+    bottom: 24px;
+    gap: 16px;
+  }
+  .sys-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+  }
+  .sys-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+  .sys-btn-countdown {
+    font-size: 20px;
+  }
+}
+
