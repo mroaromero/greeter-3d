@@ -217,8 +217,12 @@ test("la card abre con el borde de fuego de FlameWrap renderizando", async ({ pa
       },
       {
         cardTop: cardRect.y,
+        cardLeft: cardRect.x,
+        cardWidth: cardRect.width,
         flameTop: flameRect.y,
+        flameLeft: flameRect.x,
         cssH: flameRect.height,
+        cssW: flameRect.width,
         cardHeight: cardRect.height,
       }
     );

@@ -364,7 +364,15 @@ void main () {
 
   vec3 baseColor = uColor;
   if (uColorCycle > 0.001) {
-    baseColor = clamp(rotateHue(uColor, uRealTime * uColorCycle), 0.0, 1.0);
+    // Gradiente de hue a lo largo del perímetro: el color de cada llama depende
+    // de su ángulo alrededor de la card (2 ciclos por vuelta) y viaja con el
+    // tiempo (uRealTime * uColorCycle) como un arcoíris móvil sobre el borde.
+    float ang = atan(rel.y, rel.x);
+    baseColor = clamp(
+      rotateHue(uColor, ang * 2.0 + uRealTime * uColorCycle),
+      0.0,
+      1.0
+    );
   }
 
   float d0 = sdRoundRect(rel, uRectHalf, corner);

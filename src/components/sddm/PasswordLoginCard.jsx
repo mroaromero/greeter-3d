@@ -7,8 +7,10 @@ import { FlameWrap } from "../canvasui/FlameWrap";
 // FlameWrap (Canvas UI): borde de fuego WebGL alrededor de la card. Config base
 // = demo oficial de canvasui.dev, ajustada: radius 40 > la card (32px) para que
 // el arco redondeado de la card se vea dentro del fuego (la esquina no queda
-// tapada), melt reducido para morder menos el canto, y colorCycle rota el hue
-// de la llama en el shader (azul → magenta → naranja → ... ~10.5s por ciclo).
+// tapada), melt reducido para morder menos el canto, y colorCycle mueve un
+// gradiente de hue que viaja por el borde: en el shader el color de cada llama
+// depende de su ángulo alrededor de la card (2 ciclos por vuelta) + el tiempo
+// (uRealTime), como un arcoíris móvil (~7.9s por tour completo).
 // En navegadores sin la API experimental html-in-canvas (QtWebEngine/SDDM, p.ej.)
 // las llamas se dibujan igual alrededor de la silueta, sin capturar el contenido.
 const FLAME_PROPS = {
@@ -32,7 +34,7 @@ const FLAME_PROPS = {
   ember: 2,
   scorch: 0,
   color: [0.3059, 0.5373, 1],
-  colorCycle: 0.6,
+  colorCycle: 0.8,
 };
 
 // Demo credential, until the greetd/PAM bridge replaces this check.
