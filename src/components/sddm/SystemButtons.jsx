@@ -1,136 +1,78 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import React from "react";
 import PropTypes from "prop-types";
+import { HoldButton } from "./HoldButton";
 
 /* ── Iconos universales del sistema ─────────────────────────────────────── */
-/* Símbolos estándar que se reconocen a simple vista.                      */
+/* Símbolos estándar que se reconocen a simple vista (stroke line rounded). */
 
 const ICON_POWER = (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="7" />
     <path d="M12 4v3" />
   </svg>
 );
 
 const ICON_RESTART = (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 3v7M12 12l3-3M12 12l-3-3" />
     <path d="M12 21v-7M12 14l3 3M12 14l-3 3" />
   </svg>
 );
 
 const ICON_SUSPEND = (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6 3v18" />
     <path d="M18 3v18" />
+  </svg>
+);
+
+const ICON_CHECK = (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
   </svg>
 );
 
 /**
  * System action buttons: power off, restart, suspend.
  *
- * Icon-only prism-edge buttons with universal system symbols.
- * Click once to arm a 5-second countdown; click again to cancel.
- * After 5s the corresponding callback fires.
+ * Hold-to-confirm circles (react-bits HoldButton adapted): press and hold
+ * ~2s to fire the action; releasing early cancels. The violet fill (#7c5cff)
+ * rises while holding and the icon swaps to a check when it confirms,
+ * harmonized with the greeter palette (dark indigo #201c33 base).
  */
 export function SystemButtons({ onPowerOff, onRestart, onSuspend }) {
-  const [countdown, setCountdown] = useState({
-    power: 0,
-    restart: 0,
-    suspend: 0,
-  });
-  const intervals = useRef({
-    power: null,
-    restart: null,
-    suspend: null,
-  });
-
-  const clearTimer = useCallback((type) => {
-    if (intervals.current[type]) {
-      clearInterval(intervals.current[type]);
-      intervals.current[type] = null;
-    }
-    setCountdown((prev) => ({ ...prev, [type]: 0 }));
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      Object.keys(intervals.current).forEach((key) => {
-        if (intervals.current[key]) clearInterval(intervals.current[key]);
-      });
-    };
-  }, []);
-
-  const handleClick = useCallback((type, onAction) => {
-    if (countdown[type] > 0) {
-      clearTimer(type);
-      return;
-    }
-
-    setCountdown((prev) => ({ ...prev, [type]: 5 }));
-    intervals.current[type] = setInterval(() => {
-      setCountdown((prev) => {
-        const val = prev[type];
-        if (val === null || val === undefined || val <= 1) {
-          clearInterval(intervals.current[type]);
-          intervals.current[type] = null;
-          onAction?.();
-          return { ...prev, [type]: 0 };
-        }
-        return { ...prev, [type]: val - 1 };
-      });
-    }, 1000);
-  }, [countdown, clearTimer]);
-
-  const getIcon = (type) => {
-    switch (type) {
-      case "power": return ICON_POWER;
-      case "restart": return ICON_RESTART;
-      case "suspend": return ICON_SUSPEND;
-      default: return null;
-    }
-  };
-
-  const getLabel = (type) => {
-    switch (type) {
-      case "power": return "Apagar";
-      case "restart": return "Reiniciar";
-      case "suspend": return "Suspender";
-      default: return "";
-    }
-  };
-
-  const getAction = (type) => {
-    switch (type) {
-      case "power": return onPowerOff;
-      case "restart": return onRestart;
-      case "suspend": return onSuspend;
-      default: return undefined;
-    }
-  };
+  const actions = [
+    { type: "power", label: "Apagar", icon: ICON_POWER, action: onPowerOff },
+    { type: "restart", label: "Reiniciar", icon: ICON_RESTART, action: onRestart },
+    { type: "suspend", label: "Suspender", icon: ICON_SUSPEND, action: onSuspend },
+  ];
 
   return (
     <div className="sys-btns">
-      {["suspend", "restart", "power"].map((type) => {
-        const secs = countdown[type];
-        const isCounting = secs > 0;
-        const Icon = getIcon(type);
-        const onAction = getAction(type);
-        return (
-          <button
-            key={type}
-            className={`sys-btn sys-btn--${type} ${isCounting ? "sys-btn--counting" : ""}`}
-            onClick={() => handleClick(type, onAction)}
-            title={getLabel(type)}
-            aria-label={getLabel(type)}
-          >
-            {isCounting ? (
-              <span className="sys-btn-countdown">{secs}</span>
-            ) : (
-              Icon
-            )}
-          </button>
-        );
-      })}
+      {actions.map(({ type, label, icon, action }) => (
+        <HoldButton
+          key={type}
+          className="sys-power-btn"
+          ariaLabel={label}
+          title={label}
+          srHint={`${label}: mantené presionado para confirmar`}
+          icon={icon}
+          doneIcon={ICON_CHECK}
+          backgroundColor="#201c33"
+          fillColor="#7c5cff"
+          textColor="#f5f5f5"
+          fillTextColor="#ffffff"
+          radius={999}
+          holdTime={2000}
+          releaseTime={200}
+          fillDirection="up"
+          wave
+          waveAmplitude={6}
+          glow
+          resetAfter={1200}
+          onHold={action}
+        />
+      ))}
     </div>
   );
 }

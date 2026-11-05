@@ -154,7 +154,16 @@ test("la card abre con el borde de fuego de FlameWrap renderizando", async ({ pa
   // compositor) y dibuja en un canvas 2D, que sí se puede leer siempre.
   const capture = () =>
     page.evaluate(
-      async ({ cardTop, flameTop, cssH, cardHeight }) => {
+      async ({
+        cardTop,
+        cardLeft,
+        cardWidth,
+        flameTop,
+        flameLeft,
+        cssH,
+        cssW,
+        cardHeight,
+      }) => {
         const c = document.querySelector('canvas[aria-hidden="true"]');
         await new Promise(requestAnimationFrame); // deja al loop dibujar un frame
         const tmp = document.createElement("canvas");
@@ -170,17 +179,21 @@ test("la card abre con el borde de fuego de FlameWrap renderizando", async ({ pa
           if (data[i] > 10) alive++;
         }
 
-        // Muestra un píxel del centro horizontal, mapeado desde CSS (la copia
-        // 2D comparte el origen arriba-izquierda). y se clampa al buffer.
-        const at = (cssY) => {
-          const midX = Math.round(width / 2);
+        // Muestra un píxel mapeado desde CSS (la copia 2D comparte el origen
+        // arriba-izquierda y, a dpr 1, la misma escala CSS → píxel a píxel).
+        const at = (cssX, cssY) => {
+          const x = Math.min(
+            width - 1,
+            Math.max(0, Math.round((cssX - flameLeft) * (width / cssW)))
+          );
           const y = Math.min(
             height - 1,
             Math.max(0, Math.round((cssY - flameTop) * (height / cssH)))
           );
-          const o = (y * width + midX) * 4;
+          const o = (y * width + x) * 4;
           return [data[o], data[o + 1], data[o + 2], data[o + 3]];
         };
+        const cardCenterX = cardLeft + cardWidth / 2;
 
         // Media de color a lo largo de una tira del borde superior: la media
         // promedia el parpadeo del ruido, dejando ver el color de fase actual.
@@ -209,9 +222,13 @@ test("la card abre con el borde de fuego de FlameWrap renderizando", async ({ pa
         return {
           alive,
           // 3px adentro del borde superior: donde el fuego muerde la silueta.
-          topEdge: at(cardTop + 3),
+          topEdge: at(cardCenterX, cardTop + 3),
+          // Gradiente espacial: un cuarto y tres cuartos del ancho de la card
+          // en el mismo instante → distinto hue si el color viaja por el borde.
+          leftEdge: at(cardLeft + cardWidth * 0.25, cardTop + 3),
+          rightEdge: at(cardLeft + cardWidth * 0.75, cardTop + 3),
           // Centro de la card: en fallback no se captura contenido.
-          interior: at(cardTop + cardHeight / 2),
+          interior: at(cardCenterX, cardTop + cardHeight / 2),
           strip: [sr, sg, sb],
         };
       },
@@ -248,4 +265,48 @@ test("la card abre con el borde de fuego de FlameWrap renderizando", async ({ pa
     spread([c1.strip[1], c2.strip[1], c3.strip[1]]) +
     spread([c1.strip[2], c2.strip[2], c3.strip[2]]);
   expect(traveled).toBeGreaterThan(60);
+  // Gradiente espacial: en el MISMO instante, dos tercios del borde superior
+  // tienen hue distinto (el color viaja a lo largo del perímetro, no es un
+  // color único que rota).
+  const gap = (a, b) =>
+    Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
+  expect(gap(c1.leftEdge, c1.rightEdge)).toBeGreaterThan(40);
+});
+
+test("mantener presionado el botón de poder confirma la acción", async ({ page }) => {
+  await page.locator("#text").click();
+  await expect(page.locator(".sddm-card")).toBeVisible();
+
+  const power = page.getByRole("button", { name: "Apagar" });
+  await expect(power).toBeVisible();
+  const box = await power.boundingBox();
+  expect(box).not.toBeNull();
+  expect(power).toHaveAttribute("data-phase", "idle");
+
+  // Mantener 2s (holdTime) completa el hold → onHold → notificación de sistema.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect(power).toHaveAttribute("data-phase", "holding");
+  await page.waitForTimeout(2400);
+  await page.mouse.up();
+
+  await expect(page.getByText("Apagando…")).toBeVisible();
+});
+
+test("soltar el botón de poder antes de tiempo cancela la acción", async ({ page }) => {
+  await page.locator("#text").click();
+  await expect(page.locator(".sddm-card")).toBeVisible();
+
+  const power = page.getByRole("button", { name: "Apagar" });
+  const box = await power.boundingBox();
+  expect(box).not.toBeNull();
+
+  // Hold breve (< holdTime): al soltar vuelve a idle y nada se dispara.
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(500);
+  await page.mouse.up();
+
+  await expect(power).toHaveAttribute("data-phase", "idle");
+  await expect(page.getByText("Apagando…")).toHaveCount(0);
 });
