@@ -58,6 +58,11 @@ test("el login completo: click, contraseña, éxito y cierre con Esc", async ({ 
   const card = page.locator(".sddm-card");
   await expect(card).toBeVisible();
 
+  // La card vive dentro de FlameWrap (Canvas UI): su canvas WebGL de salida
+  // debe montarse al abrir, aunque el Chromium E2E no tenga la API
+  // experimental html-in-canvas (las llamas se dibujan por silueta).
+  await expect(page.locator('canvas[aria-hidden="true"]')).toBeVisible();
+
   // Real browser: the hidden input must own focus, or typing goes nowhere.
   const password = page.locator('input[aria-label="Contraseña"]');
   await expect(password).toBeFocused();
@@ -132,4 +137,111 @@ test("las cuatro esquinas vuelven al Hello World al cerrar el login", async ({ p
   );
   expect(returned.average).toBeLessThan(threshold);
   expect(returned.average).toBeLessThan(dispersedStats.average / 1.5);
+});
+
+test("la card abre con el borde de fuego de FlameWrap renderizando", async ({ page }) => {
+  await page.locator("#text").click();
+  await expect(page.locator(".sddm-card")).toBeVisible();
+
+  const cardRect = await page.locator(".sddm-card").boundingBox();
+  const flameRect = await page.locator('canvas[aria-hidden="true"]').boundingBox();
+  expect(cardRect).not.toBeNull();
+  expect(flameRect).not.toBeNull();
+
+  // Captura fiable del frame: leer readPixels directo de un canvas WebGL sin
+  // preserveDrawingBuffer es una carrera contra el clear post-composición.
+  // drawImage() de un canvas WebGL sincroniza la surface presentada (como el
+  // compositor) y dibuja en un canvas 2D, que sí se puede leer siempre.
+  const capture = () =>
+    page.evaluate(
+      async ({ cardTop, flameTop, cssH, cardHeight }) => {
+        const c = document.querySelector('canvas[aria-hidden="true"]');
+        await new Promise(requestAnimationFrame); // deja al loop dibujar un frame
+        const tmp = document.createElement("canvas");
+        tmp.width = c.width;
+        tmp.height = c.height;
+        const tctx = tmp.getContext("2d");
+        tctx.drawImage(c, 0, 0);
+        const img = tctx.getImageData(0, 0, tmp.width, tmp.height);
+        const { data, width, height } = img;
+
+        let alive = 0;
+        for (let i = 3; i < data.length; i += 4) {
+          if (data[i] > 10) alive++;
+        }
+
+        // Muestra un píxel del centro horizontal, mapeado desde CSS (la copia
+        // 2D comparte el origen arriba-izquierda). y se clampa al buffer.
+        const at = (cssY) => {
+          const midX = Math.round(width / 2);
+          const y = Math.min(
+            height - 1,
+            Math.max(0, Math.round((cssY - flameTop) * (height / cssH)))
+          );
+          const o = (y * width + midX) * 4;
+          return [data[o], data[o + 1], data[o + 2], data[o + 3]];
+        };
+
+        // Media de color a lo largo de una tira del borde superior: la media
+        // promedia el parpadeo del ruido, dejando ver el color de fase actual.
+        let sr = 0,
+          sg = 0,
+          sb = 0,
+          sn = 0;
+        const yEdge = Math.min(
+          height - 1,
+          Math.max(0, Math.round((cardTop + 3 - flameTop) * (height / cssH)))
+        );
+        const stripW = 64;
+        const midX = Math.round(width / 2);
+        for (let dx = -stripW / 2; dx <= stripW / 2; dx += 4) {
+          const x = Math.min(width - 1, Math.max(0, midX + dx));
+          const o = (yEdge * width + x) * 4;
+          sr += data[o];
+          sg += data[o + 1];
+          sb += data[o + 2];
+          sn++;
+        }
+        sr /= sn;
+        sg /= sn;
+        sb /= sn;
+
+        return {
+          alive,
+          // 3px adentro del borde superior: donde el fuego muerde la silueta.
+          topEdge: at(cardTop + 3),
+          // Centro de la card: en fallback no se captura contenido.
+          interior: at(cardTop + cardHeight / 2),
+          strip: [sr, sg, sb],
+        };
+      },
+      {
+        cardTop: cardRect.y,
+        flameTop: flameRect.y,
+        cssH: flameRect.height,
+        cardHeight: cardRect.height,
+      }
+    );
+
+  const c1 = await capture();
+  await page.waitForTimeout(1800);
+  const c2 = await capture();
+  await page.waitForTimeout(1800);
+  const c3 = await capture();
+
+  // El efecto dibujó fuego: decenas de miles de píxeles vivos.
+  expect(c1.alive).toBeGreaterThan(10_000);
+  // En el borde superior el fuego abraza la silueta (canal alfa alto).
+  const a = c1.topEdge[3];
+  expect(a).toBeGreaterThan(120);
+  // Fallback puro: el interior de la card no se captura (canvas transparente).
+  expect(c1.interior[3]).toBeLessThan(10);
+  // El hue rota (colorCycle): en ~3.6s de capturas el color medio viaja;
+  // con color estático las tres tiras serían casi idénticas.
+  const spread = (arr) => Math.max(...arr) - Math.min(...arr);
+  const traveled =
+    spread([c1.strip[0], c2.strip[0], c3.strip[0]]) +
+    spread([c1.strip[1], c2.strip[1], c3.strip[1]]) +
+    spread([c1.strip[2], c2.strip[2], c3.strip[2]]);
+  expect(traveled).toBeGreaterThan(60);
 });

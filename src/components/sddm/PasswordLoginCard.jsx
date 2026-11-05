@@ -2,6 +2,38 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { WordleTiles } from "./WordleTiles";
 import { KeyCap } from "./KeyCap";
 import { ClockWeatherWidget } from "./ClockWeatherWidget";
+import { FlameWrap } from "../canvasui/FlameWrap";
+
+// FlameWrap (Canvas UI): borde de fuego WebGL alrededor de la card. Config base
+// = demo oficial de canvasui.dev, ajustada: radius 40 > la card (32px) para que
+// el arco redondeado de la card se vea dentro del fuego (la esquina no queda
+// tapada), melt reducido para morder menos el canto, y colorCycle rota el hue
+// de la llama en el shader (azul → magenta → naranja → ... ~10.5s por ciclo).
+// En navegadores sin la API experimental html-in-canvas (QtWebEngine/SDDM, p.ej.)
+// las llamas se dibujan igual alrededor de la silueta, sin capturar el contenido.
+const FLAME_PROPS = {
+  intensity: 0.5,
+  height: 170,
+  spread: 8,
+  radius: 40,
+  speed: 0.25,
+  scale: 0.75,
+  turbulence: 0.5,
+  turbulenceScale: 0.5,
+  turbulenceReach: 25,
+  sparks: 1.5,
+  sparkSize: 0.35,
+  sparkDensity: 1,
+  sparkSpeed: 1,
+  rim: 2.5,
+  melt: 2.5,
+  distortion: 10,
+  smoke: 1.5,
+  ember: 2,
+  scorch: 0,
+  color: [0.3059, 0.5373, 1],
+  colorCycle: 0.6,
+};
 
 // Demo credential, until the greetd/PAM bridge replaces this check.
 // 10 characters on purpose: it exercises the sliding window (> 8 tiles) and the
@@ -98,6 +130,7 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
 
   return (
     <div className="sddm-overlay-backdrop">
+      <FlameWrap className="sddm-flame" {...FLAME_PROPS}>
       <div className={`sddm-card ${status === "error" ? "sddm-shake" : ""}`}>
 
         {/* Close button */}
@@ -245,6 +278,7 @@ export function PasswordLoginCard({ onClose, onLoginSuccess, userName = "Manuel 
           )}
         </form>
       </div>
+      </FlameWrap>
     </div>
   );
 }
