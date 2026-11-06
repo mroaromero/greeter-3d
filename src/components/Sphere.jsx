@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { useRef, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { BallCollider, RigidBody, CylinderCollider } from "@react-three/rapier";
-import { attractionVelocity, RETURN_RELEASE_RADIUS } from "./returnMotion";
+import { attractionVelocity, HOME_RELEASE_RADIUS } from "./returnMotion";
 
 const geometryTypes = {
   Sphere: new THREE.SphereGeometry(0.7, 32, 32),
@@ -59,6 +59,24 @@ export function Bubble({
       Math.cos(angle) * radius * 1.3,
       Math.sin(angle) * radius * 1.1,
       ((index % 5) - 2) * 0.8
+    );
+  }, [index]);
+
+  // Hogar de reposo: un slot propio en una concha esférica alrededor del Hello
+  // World (radio ~4.2, aplastada en y y z para abrazar el ecuador del texto).
+  // Ángulo áureo + distribución polar uniforme: reparten las 45 burbujas sin
+  // solaparse. La concha es sensiblemente más chica que las esquinas (radio
+  // ~7.5), así el viaje nube → esquinas es claramente hacia afuera. Al abrir el
+  // login parten de aquí hacia su esquina; al cerrar vuelven acá: la nube
+  // nunca nace "desde abajo".
+  const homeOffset = useMemo(() => {
+    const angle = index * 2.39996; // ángulo áureo
+    const polar = Math.acos(1 - 2 * ((index % 23) / 23)); // distribución esférica uniforme
+    const R = 4.2;
+    return new THREE.Vector3(
+      Math.cos(angle) * Math.sin(polar) * R,
+      Math.cos(polar) * R * 0.75,
+      Math.sin(angle) * Math.sin(polar) * R * 0.65
     );
   }, [index]);
 
@@ -136,20 +154,32 @@ export function Bubble({
         true
       );
     } else {
-      const dist = Math.sqrt(pos.x * pos.x + pos.y * pos.y + pos.z * pos.z);
+      // HOGAR: cada burbuja tiene su slot en la concha alrededor del texto.
+      const dx = homeOffset.x - pos.x;
+      const dy = homeOffset.y - pos.y;
+      const dz = homeOffset.z - pos.z;
+      const dHome = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
       if (returning.current) {
-        // RETURN PHASE: the four corner groups (index % 4) travel back to the
-        // Hello World together. They arc inward and are released at a radius,
-        // never at the exact origin, so they rejoin the ambient cloud around
-        // the text instead of piling into one point and exploding apart.
-        if (dist < RETURN_RELEASE_RADIUS) {
+        // RETURN PHASE: cada burbuja planea desde su esquina hasta su propio
+        // hogar (no al origen crudo), así cerrar el login reforma la nube en
+        // vez de colapsar a un punto y re-dispersarse desde abajo. El tope de
+        // velocidad y el giro varían por burbuja para que la llegada sea
+        // orgánica y nunca sincronizada.
+        if (dHome < HOME_RELEASE_RADIUS) {
           returning.current = false;
         } else {
-          api.current.setLinvel(attractionVelocity(pos), true);
+          api.current.setLinvel(
+            attractionVelocity(pos, {
+              target: homeOffset,
+              maxSpeed: 6 + (index % 4) * 1.2,
+              swirl: 0.25 + (index % 5) * 0.15,
+            }),
+            true
+          );
 
           // Spin fades out as they converge, so arrival feels like settling.
-          const spin = Math.min(1, (dist - RETURN_RELEASE_RADIUS) / 6);
+          const spin = Math.min(1, (dHome - HOME_RELEASE_RADIUS) / 6);
           api.current.setAngvel(
             {
               x: Math.sin(state.clock.elapsedTime * 1.2 + index) * 0.8 * spin,
@@ -162,15 +192,14 @@ export function Bubble({
         }
       }
 
-      // RESTING MODE: converge and accumulate gently in center around HelloWorld
-      vec
-        .set(pos.x, pos.y, pos.z)
-        .normalize()
-        .multiply({
-          x: -50 * delta * scale,
-          y: -150 * delta * scale,
-          z: -50 * delta * scale,
-        });
+      // RESTING MODE: resorte uniforme hacia el hogar más una deriva
+      // tangencial suave: la nube orbita lentamente el texto y el fondo se
+      // siente vivo en tiempo real (nada de apilarse abajo).
+      const spring = 30 * delta * scale;
+      vec.set(dx * spring, dy * spring, dz * spring);
+      vec.x += -pos.y * 2.4 * delta * scale;
+      vec.y += pos.x * 2.4 * delta * scale;
+      vec.z += Math.sin(state.clock.elapsedTime * 0.8 + index) * 0.5 * delta * scale;
       api.current.applyImpulse(vec, true);
     }
   });
@@ -199,7 +228,7 @@ export function Bubble({
       linearDamping={0.65}
       angularDamping={0.15}
       friction={0.2}
-      position={[r(20), r(20) - 25, r(20) - 10]}
+      position={[r(30) - 15, r(26) - 13, r(24) - 12]}
       ref={api}
       colliders="hull"
       dispose={null}
