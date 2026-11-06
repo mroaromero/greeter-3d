@@ -4,16 +4,18 @@ import { useFrame } from "@react-three/fiber";
 import { BallCollider, RigidBody, CylinderCollider } from "@react-three/rapier";
 import { attractionVelocity, HOME_RELEASE_RADIUS } from "./returnMotion";
 
-const geometryTypes = {
-  Sphere: new THREE.SphereGeometry(0.7, 32, 32),
-  Box: new THREE.BoxGeometry(1, 1, 1),
-  Cone: new THREE.ConeGeometry(0.7, 2, 32),
-  Cylinder: new THREE.CylinderGeometry(0.5, 0.5, 1.2, 32),
-  Dodecahedron: new THREE.DodecahedronGeometry(0.8),
-  Icosahedron: new THREE.IcosahedronGeometry(1),
-  Octahedron: new THREE.OctahedronGeometry(1),
-  Tetrahedron: new THREE.TetrahedronGeometry(1),
-  Torus: new THREE.TorusGeometry(0.7, 0.3, 32, 64),
+// Única geometría usada: el App siempre renderiza torus (las otras variantes
+// del prototipo quedaron inalcanzables y se eliminaron en la auditoría).
+const TORUS_GEOMETRY = new THREE.TorusGeometry(0.7, 0.3, 32, 64);
+
+// Signos de esquina para el grupo index % 4:
+// 0: sup-der (+x,+y), 1: sup-izq (-x,+y), 2: inf-izq (-x,-y), 3: inf-der (+x,-y).
+const cornerSigns = (index) => {
+  const cornerIndex = index % 4;
+  return {
+    signX: cornerIndex === 0 || cornerIndex === 3 ? 1 : -1,
+    signY: cornerIndex === 0 || cornerIndex === 1 ? 1 : -1,
+  };
 };
 
 function getRandomColor() {
@@ -25,7 +27,6 @@ export function Bubble({
   scale = 1,
   index = 0,
   r = THREE.MathUtils.randFloatSpread,
-  geometryType = "Torus",
   isDispersed = false,
   scatterSignal = 0,
 }) {
@@ -49,7 +50,7 @@ export function Bubble({
 
   // Assign this torus to one of the 4 screen corners:
   // 0: Top-Right, 1: Top-Left, 2: Bottom-Left, 3: Bottom-Right
-  const cornerIndex = index % 4;
+  // (los signos los calcula cornerSigns(index), usado por el burst y el frame)
 
   // Stable organic offset around the assigned corner so they cluster nicely
   const cornerOffset = useMemo(() => {
@@ -83,9 +84,8 @@ export function Bubble({
   // Initial blast when scatterSignal fires
   useEffect(() => {
     if (scatterSignal > 0 && api.current) {
-      const signX = cornerIndex === 0 || cornerIndex === 3 ? 1 : -1;
-      const signY = cornerIndex === 0 || cornerIndex === 1 ? 1 : -1;
-      
+      const { signX, signY } = cornerSigns(index);
+
       const burstSpeed = 35 + Math.random() * 20;
       api.current.setLinvel(
         {
@@ -105,7 +105,7 @@ export function Bubble({
         true
       );
     }
-  }, [scatterSignal, cornerIndex]);
+  }, [scatterSignal, index]);
 
   useFrame((state, delta) => {
     if (!api.current) return;
@@ -123,8 +123,7 @@ export function Bubble({
       // 1: Top-Left (-X, +Y)
       // 2: Bottom-Left (-X, -Y)
       // 3: Bottom-Right (+X, -Y)
-      const signX = cornerIndex === 0 || cornerIndex === 3 ? 1 : -1;
-      const signY = cornerIndex === 0 || cornerIndex === 1 ? 1 : -1;
+      const { signX, signY } = cornerSigns(index);
 
       const targetX = signX * (vWidth * 0.44) + cornerOffset.x;
       const targetY = signY * (vHeight * 0.42) + cornerOffset.y;
@@ -221,8 +220,6 @@ export function Bubble({
     [bubbleColor]
   );
 
-  const activeGeometry = geometryTypes[geometryType] || geometryTypes.Torus;
-
   return (
     <RigidBody
       linearDamping={0.65}
@@ -244,7 +241,7 @@ export function Bubble({
         castShadow
         receiveShadow
         scale={scale}
-        geometry={activeGeometry}
+        geometry={TORUS_GEOMETRY}
         material={bubbleMaterial}
         raycast={() => null} // Prevent toruses from blocking raycasting clicks to Hello World
       />

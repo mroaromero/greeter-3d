@@ -1,4 +1,3 @@
-import React from "react";
 import PropTypes from "prop-types";
 import { HoldButton } from "./HoldButton";
 import { PowerOff, Restart, MoonSleep } from "reicon-react";

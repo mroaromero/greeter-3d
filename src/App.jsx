@@ -31,8 +31,6 @@ const PASS_BY_SESSION = {
 const DESKTOP_SESSIONS = new Set(["revealing", "desktop", "returning"]);
 
 export const App = () => {
-  // Torus geometry by default
-  const [geometryType] = useState("Torus");
   const [isDispersed, setIsDispersed] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [scatterSignal, setScatterSignal] = useState(0);
@@ -175,16 +173,12 @@ export const App = () => {
               key={i}
               index={i}
               {...props}
-              geometryType={geometryType}
               isDispersed={isDispersed}
               scatterSignal={scatterSignal}
             />
           ))}
           <Physics gravity={[0, 0, 0]}>
-            <HelloWorld
-              onTriggerLogin={handleTriggerLogin}
-              isLoginOpen={isLoginOpen}
-            />
+            <HelloWorld onTriggerLogin={handleTriggerLogin} />
           </Physics>
         </Physics>
 

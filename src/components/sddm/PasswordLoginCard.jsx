@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { WordleTiles } from "./WordleTiles";
 import { KeyCap } from "./KeyCap";
 import { ClockWeatherWidget } from "./ClockWeatherWidget";

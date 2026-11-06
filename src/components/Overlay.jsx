@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { PasswordLoginCard } from "./sddm/PasswordLoginCard";
 import { SystemButtons } from "./sddm/SystemButtons";
 import { KeyCap } from "./sddm/KeyCap";
@@ -147,7 +147,6 @@ const Overlay = ({ isDispersed = false, isLoginOpen = false, onTriggerLogin, onC
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 200,
-            animation: "sysNotifSlide 0.3s ease forwards",
           }}
         >
           <div
