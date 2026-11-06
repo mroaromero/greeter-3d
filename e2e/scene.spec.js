@@ -35,7 +35,10 @@ test("el overlay arranca en el prompt y sin errores de consola", async ({ page }
 
   await page.goto("/?e2e=1");
 
-  await expect(page.locator("#text")).toHaveText("HAZ CLICK PARA INICIAR SESIÓN");
+  const prompt = page.locator("#text");
+  await expect(prompt).toContainText("HAZ CLICK O PRESIONA");
+  await expect(prompt).toContainText("PARA ACCEDER");
+  await expect(prompt.locator(".keycap")).toHaveCount(2);
   await expect(page.locator(".sddm-card")).toHaveCount(0);
 
   const realErrors = consoleErrors.filter(

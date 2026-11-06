@@ -16,6 +16,18 @@ export function KeyCap({ variant = "enter" }) {
     );
   }
 
+  if (variant === "space") {
+    return (
+      <span
+        className="keycap keycap--space"
+        role="img"
+        aria-label="Tecla Espacio"
+      >
+        space
+      </span>
+    );
+  }
+
   return (
     <span className="keycap keycap--enter" role="img" aria-label="Tecla Enter">
       <svg
@@ -36,5 +48,5 @@ export function KeyCap({ variant = "enter" }) {
 }
 
 KeyCap.propTypes = {
-  variant: PropTypes.oneOf(["enter", "esc"]),
+  variant: PropTypes.oneOf(["enter", "esc", "space"]),
 };

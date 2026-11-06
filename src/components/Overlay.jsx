@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { PasswordLoginCard } from "./sddm/PasswordLoginCard";
 import { SystemButtons } from "./sddm/SystemButtons";
+import { KeyCap } from "./sddm/KeyCap";
 
 const OVERLAY_POINTER_EVENTS = "none";
 
@@ -112,7 +113,8 @@ const Overlay = ({ isDispersed = false, isLoginOpen = false, onTriggerLogin, onC
             cursor: "pointer",
           }}
         >
-          HAZ CLICK PARA INICIAR SESIÓN
+          HAZ CLICK O PRESIONA <KeyCap variant="enter" /> /{" "}
+          <KeyCap variant="space" /> PARA ACCEDER
         </p>
         <div style={{ width: 10 }} />
         <p className="full" style={{ flex: "1 1 0%", fontSize: 12, lineHeight: "1em", textAlign: "right", color: "black" }} />

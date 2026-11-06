@@ -47,6 +47,27 @@ export const App = () => {
     };
   }, []);
 
+  // Referencia siempre fresca al handler de apertura (inicializada abajo).
+  useEffect(() => {
+    triggerRef.current = handleTriggerLogin;
+  });
+
+  // Enter / Space abren el login desde el greeter (además del click en el
+  // prompt). Inerte cuando la card está abierta o dispersando, fuera del
+  // greeter, o cuando el foco está en un control (password, botón de sistema).
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const target = event.target;
+      if (target?.closest?.("button, input, textarea, [role='button']")) return;
+      if (session !== "greeter" || isLoginOpen || isDispersed) return;
+      event.preventDefault();
+      triggerRef.current();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [session, isLoginOpen, isDispersed]);
+
   const { aoColor, directionalLightColor, spotLightColor, bgColor } = useControls({
     aoColor: "#5b41aa",
     directionalLightColor: "#9687ff",
@@ -66,6 +87,8 @@ export const App = () => {
       setIsLoginOpen(true);
     }, 2000);
   };
+
+  const triggerRef = useRef(handleTriggerLogin);
 
   const handleCloseLogin = () => {
     if (loginTimerRef.current) clearTimeout(loginTimerRef.current);
