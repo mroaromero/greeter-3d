@@ -30,18 +30,7 @@ p {
   padding: 0;
 }
 
-a {
-  padding-right: 10px;
-  cursor: pointer;
-  pointer-events: all;
-  color: black;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
 
-a:hover {
-  text-decoration: underline;
-}
 
 @keyframes pulseBlink {
   0%, 100% {
@@ -72,12 +61,6 @@ a:hover {
   }
   .full {
     flex: 15 1 0% !important;
-  }
-  #sk {
-    font-size: 150px !important;
-  }
-  #num {
-    font-size: 150px !important;
   }
   #text {
     font-size: 13px !important;
@@ -1228,35 +1211,5 @@ a:hover {
   .sys-power-btn.hold-button {
     width: 60px;
     height: 60px;
-  }
-}
-
-.sys-btn svg {
-  width: 30px;
-  height: 30px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
-
-@media (max-width: 470px) {
-  .sys-btns {
-    bottom: 24px;
-    gap: 16px;
-  }
-  .sys-btn {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
-  }
-  .sys-btn svg {
-    width: 24px;
-    height: 24px;
-  }
-  .sys-btn-countdown {
-    font-size: 20px;
   }
 }
