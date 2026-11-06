@@ -34,28 +34,31 @@ export function SystemButtons({ onPowerOff, onRestart, onSuspend }) {
   return (
     <div className="sys-btns">
       {actions.map(({ type, label, icon, action }) => (
-        <HoldButton
-          key={type}
-          className="sys-power-btn"
-          ariaLabel={label}
-          title={label}
-          srHint={`${label}: mantené presionado para confirmar`}
-          icon={icon}
-          doneIcon={ICON_CHECK}
-          backgroundColor="#201c33"
-          fillColor="#7c5cff"
-          textColor="#f5f5f5"
-          fillTextColor="#ffffff"
-          radius={999}
-          holdTime={2000}
-          releaseTime={200}
-          fillDirection="up"
-          wave
-          waveAmplitude={6}
-          glow
-          resetAfter={1200}
-          onHold={action}
-        />
+        <div className="sys-btn-wrap" key={type}>
+          <HoldButton
+            className="sys-power-btn"
+            ariaLabel={label}
+            srHint={`${label}: mantené presionado para confirmar`}
+            icon={icon}
+            doneIcon={ICON_CHECK}
+            backgroundColor="#201c33"
+            fillColor="#7c5cff"
+            textColor="#f5f5f5"
+            fillTextColor="#ffffff"
+            radius={999}
+            holdTime={2000}
+            releaseTime={200}
+            fillDirection="up"
+            wave
+            waveAmplitude={6}
+            glow
+            resetAfter={1200}
+            onHold={action}
+          />
+          <span className="sys-tip" role="tooltip">
+            {label}
+          </span>
+        </div>
       ))}
     </div>
   );
