@@ -1150,11 +1150,6 @@ a:hover {
     0 10px 26px -10px rgba(20, 12, 46, 0.6);
 }
 
-.sys-power-btn svg {
-  width: 28px;
-  height: 28px;
-}
-
 @media (max-width: 470px) {
   .sys-btns {
     bottom: 24px;
@@ -1163,10 +1158,6 @@ a:hover {
   .sys-power-btn.hold-button {
     width: 60px;
     height: 60px;
-  }
-  .sys-power-btn svg {
-    width: 24px;
-    height: 24px;
   }
 }
 

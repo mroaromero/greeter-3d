@@ -1,30 +1,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { HoldButton } from "./HoldButton";
+import { PowerOff, Restart, MoonSleep } from "reicon-react";
 
-/* ── Iconos universales del sistema ─────────────────────────────────────── */
-/* Símbolos estándar que se reconocen a simple vista (stroke line rounded). */
+/* ── Iconos de sistema (@reicon-react, size 24) ──────────────────────── */
+/* PowerOff | Restart | MoonSleep, en ese orden de derecha a izquierda. */
 
-const ICON_POWER = (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="7" />
-    <path d="M12 4v3" />
-  </svg>
-);
-
-const ICON_RESTART = (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3v7M12 12l3-3M12 12l-3-3" />
-    <path d="M12 21v-7M12 14l3 3M12 14l-3 3" />
-  </svg>
-);
-
-const ICON_SUSPEND = (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 3v18" />
-    <path d="M18 3v18" />
-  </svg>
-);
+const ICON_POWER_OFF = <PowerOff size={24} />;
+const ICON_RESTART = <Restart size={24} />;
+const ICON_MOON_SLEEP = <MoonSleep size={24} />;
 
 const ICON_CHECK = (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
@@ -42,9 +26,9 @@ const ICON_CHECK = (
  */
 export function SystemButtons({ onPowerOff, onRestart, onSuspend }) {
   const actions = [
-    { type: "power", label: "Apagar", icon: ICON_POWER, action: onPowerOff },
+    { type: "suspend", label: "Suspender", icon: ICON_MOON_SLEEP, action: onSuspend },
     { type: "restart", label: "Reiniciar", icon: ICON_RESTART, action: onRestart },
-    { type: "suspend", label: "Suspender", icon: ICON_SUSPEND, action: onSuspend },
+    { type: "power", label: "Apagar", icon: ICON_POWER_OFF, action: onPowerOff },
   ];
 
   return (
