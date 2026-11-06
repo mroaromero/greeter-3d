@@ -287,3 +287,15 @@ test("soltar el botón de poder antes de tiempo cancela la acción", async ({ pa
   await expect(power).toHaveAttribute("data-phase", "idle");
   await expect(page.getByText("Apagando…")).toHaveCount(0);
 });
+
+test("enter y space abren la tarjeta de login", async ({ page }) => {
+  // Enter abre el login (además del click en el prompt).
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".sddm-card")).toBeVisible({ timeout: 15000 });
+
+  // Cerrar con Esc y volver a abrir con Space: las dos teclas abren.
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".sddm-card")).toBeHidden({ timeout: 10000 });
+  await page.keyboard.press("Space");
+  await expect(page.locator(".sddm-card")).toBeVisible({ timeout: 15000 });
+});
