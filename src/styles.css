@@ -1170,7 +1170,8 @@ a:hover {
   transform: translateX(-50%) translateY(5px);
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  /* Ocultar: rápido y sin delay (el delay va solo en la aparición). */
+  transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 130;
   padding: 6px 12px;
   border-radius: 9px;
@@ -1202,10 +1203,21 @@ a:hover {
   filter: drop-shadow(0 2px 2px rgba(20, 12, 46, 0.4));
 }
 
+/* Mostrar con delay de 300ms: hover con el ratón, o foco por TECLADO
+   (:focus-visible). El foco por click NO es focus-visible, así el tooltip
+   no queda pegado después de usar el botón (el bug del :focus-within). */
 .sys-btn-wrap:hover .sys-tip,
-.sys-btn-wrap:focus-within .sys-tip {
+.sys-btn-wrap:has(.hold-button:focus-visible) .sys-tip {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+  transition: opacity 0.18s ease 0.3s, transform 0.18s ease 0.3s;
+}
+
+/* Mientras se mantiene presionado (hold-to-confirm) no molesta: al instante. */
+.sys-btn-wrap:active .sys-tip {
+  opacity: 0;
+  transform: translateX(-50%) translateY(5px);
+  transition: none;
 }
 
 @media (max-width: 470px) {
